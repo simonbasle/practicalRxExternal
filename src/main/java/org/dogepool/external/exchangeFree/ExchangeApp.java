@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.Random;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +31,8 @@ public class ExchangeApp {
     }
 
     @RequestMapping(value = "/{from}/{to}", produces = MediaType.APPLICATION_JSON_VALUE)
-    private Map<String, Object> exchangeRate(@PathVariable String from, @PathVariable String to) throws InterruptedException {
+    private ResponseEntity<?> exchangeRate(@PathVariable String from, @PathVariable String to)
+            throws InterruptedException {
         long start = System.currentTimeMillis();
         if (down) {
             System.out.println("Down, sleeping for 5s");
@@ -37,11 +40,11 @@ public class ExchangeApp {
         }
 
         if (from == null || from.length() != 3 || !from.toUpperCase().equals(from)) {
-            throw new IllegalArgumentException("Unknown currency " + from);
+            return new ResponseEntity<String>("Unknown currency " + from, HttpStatus.NOT_FOUND);
         }
 
         if (to == null || to.length() != 3 || !to.toUpperCase().equals(to)) {
-            throw new IllegalArgumentException("Unknown currency " + to);
+            return new ResponseEntity<String>("Unknown currency " + to, HttpStatus.NOT_FOUND);
         }
 
         Random rng = new Random(System.currentTimeMillis());
@@ -65,6 +68,6 @@ public class ExchangeApp {
             result.put("rate", 0.5);
         }
         metrics.put("executionTime", (System.currentTimeMillis() - start) + "ms");
-        return result;
+        return ResponseEntity.ok(result);
     }
 }
